@@ -20,6 +20,18 @@ class RosVersion:
 
 class RosVersions:
     ros_version = [
+        # ubuntu 26
+        RosVersion(
+            "lyrical",
+            "ROS2",
+            RosVersion.STATUS_LTS,
+            [
+                "python3-colcon-core",
+                "python3-colcon-common-extensions",
+                "python3-argcomplete",
+                "python3-rosdep",
+            ],
+        ),
         # ubuntu 24
         RosVersion(
             "kilted",

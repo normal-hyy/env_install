@@ -17,6 +17,7 @@ class RosVersion:
 
 class RosVersions:
     ros_version = [ 
+        RosVersion('lyrical', 'ROS2', RosVersion.STATUS_LTS, ['osrf/ros:lyrical-desktop'],["osrf/ros:lyrical-desktop"]),
         RosVersion('jazzy', 'ROS2', RosVersion.STATUS_LTS, ['osrf/ros:jazzy-desktop-full'],["ros:jazzy"]),
         RosVersion('noetic',  'ROS1', RosVersion.STATUS_LTS, ['fishros2/ros:noetic-desktop-full'],["ros:noetic"]),
         RosVersion('humble',  'ROS2', RosVersion.STATUS_LTS, ['fishros2/ros:humble-desktop-full'],["ros:humble"]),
