@@ -14,7 +14,7 @@ if [ $UID -ne 0 ];then
     SUDO='sudo'
 fi
 $SUDO apt install python3-distro python3-yaml -y
-$SUDO FISH_INSTALL_CONFIG=/tmp/fishinstall/fish_install.yaml python3 /tmp/fishinstall/install.py
+$SUDO env FISHROS_URL=$FISHROS_URL FISH_INSTALL_CONFIG=/tmp/fishinstall/fish_install.yaml python3 /tmp/fishinstall/install.py
 $SUDO rm -rf /tmp/fishinstall/
 
 if [ -f robot_env ]; then
