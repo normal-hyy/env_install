@@ -33,9 +33,14 @@ wget http://<你的服务器地址>/robot_env_install -O robot_env && . robot_en
 如果你要把当前仓库部署到自己的服务器，推荐先在服务器上生成静态站点：
 
 ```
-./scripts/prepare_static_site.sh http://<你的服务器地址>:8000 /tmp/env_install_site
+部署方法
+cd /home/user/env_install
+bash scripts/prepare_static_site.sh http://192.168.31.25:8088 /tmp/env_install_site
+cp Dockerfile /tmp/env_install_site/
 cd /tmp/env_install_site
-python3 -m http.server 8000
+docker rm -f env-install-site
+docker build -t env-install-site .
+docker run -d --name env-install-site -p 8088:80 env-install-site
 ```
 
 部署完成后可使用：
