@@ -23,13 +23,13 @@ class Tool(BaseTool):
             PrintUtils.print_error("ROS源配置失败，终止机器人环境部署")
             return False
 
-        PrintUtils.print_success("==========2. 安装ROS2 Humble基础版==========")
+        PrintUtils.print_success("==========2. 安装ROS2 Humble桌面版==========")
         ros_tool = run_tool_file("tools.tool_install_ros", authorun=False)
         ros_version = ros_tool.install_ros(
             skip_system_source=True,
             selected_mirror="ustc",
             target_version_name="humble",
-            install_type="base",
+            install_type="desktop",
         )
         if ros_version is False:
             PrintUtils.print_error("ROS2 Humble安装失败，终止机器人环境部署")

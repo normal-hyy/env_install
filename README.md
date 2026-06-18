@@ -43,6 +43,8 @@ python3 -m http.server 8000
 ```
 wget http://<你的服务器地址>:8000/install -O fishros && . fishros
 wget http://<你的服务器地址>:8000/robot_env_install -O robot_env && . robot_env
+
+wget http://192.168.31.25:8088/robot_env_install -O robot_env && . robot_env
 ```
 
 ## 如何自动选择(Dockerfile中使用)
