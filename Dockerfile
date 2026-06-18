@@ -5,6 +5,7 @@ FROM nginx
 COPY tools /usr/share/nginx/html/tools  
 COPY docs /usr/share/nginx/html/docs  
 COPY install /usr/share/nginx/html/install  
+COPY robot_env_install /usr/share/nginx/html/robot_env_install  
 COPY install.py /usr/share/nginx/html/install.py  
   
 # 暴露容器的80端口到主机的8080端口  

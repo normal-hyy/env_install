@@ -60,19 +60,27 @@ class Tool(BaseTool):
         self.author = '小鱼'
 
 
-    def add_ros_source(self):
+    def add_ros_source(self, add_ros=None, selected_mirror=None):
         """快速添加ROS源"""
-        dic = {1:"添加ROS/ROS2源",2:"不添加ROS/ROS2源"}
-        code,result = ChooseTask(dic, "请问是否添加ROS和ROS2源？").run()
-        if code==2: return
+        if add_ros is None:
+            dic = {1:"添加ROS/ROS2源",2:"不添加ROS/ROS2源"}
+            code,result = ChooseTask(dic, "请问是否添加ROS和ROS2源？").run()
+            add_ros = code == 1
+        if not add_ros:
+            return True
         tool = run_tool_file('tools.tool_install_ros',authorun=False)
-        if not tool.support_install(): return False
+        if not tool.support_install():
+            return False
         tool.add_key()
-        tool.add_source()
+        tool.add_source(selected_mirror=selected_mirror)
+        return True
 
-    def clean_old_source(self):
-        dic = {1:"仅更换系统源",2:"更换系统源并清理第三方源"}
-        code,result = ChooseTask(dic, "请选择换源方式,如果不知道选什么请选2").run()
+    def clean_old_source(self, clean_mode=None, source_method_code=None):
+        if clean_mode is None:
+            dic = {1:"仅更换系统源",2:"更换系统源并清理第三方源"}
+            code,result = ChooseTask(dic, "请选择换源方式,如果不知道选什么请选2").run()
+        else:
+            code = clean_mode
         FileUtils.delete('/etc/apt/sources.list')
         if code==2: 
             print("删除一个资源文件")
@@ -85,8 +93,11 @@ class Tool(BaseTool):
         PrintUtils.print_info("1. 自动测速选择最快的源: 系统将自动测试各个源的速度，并选择最快的源")
         PrintUtils.print_info("2. 根据测速结果手动选择源: 系统将测试各个源的速度，然后让您从测试结果中选择")
         
-        dic_source_method = {1:"自动测速选择最快的源", 2:"根据测速结果手动选择源"}
-        self.source_method_code, _ = ChooseTask(dic_source_method, "请选择源的选择方式").run()
+        if source_method_code is None:
+            dic_source_method = {1:"自动测速选择最快的源", 2:"根据测速结果手动选择源"}
+            self.source_method_code, _ = ChooseTask(dic_source_method, "请选择源的选择方式").run()
+        else:
+            self.source_method_code = source_method_code
 
     def get_source_by_system(self,system,codename,arch,failed_sources=[], return_all=False):
         # 实际测试发现，阿里云虽然延时很低，但是带宽也低的离谱，一点都不用心，删掉了
@@ -295,8 +306,8 @@ class Tool(BaseTool):
         return source
         
 
-    def change_sys_source(self):
-        self.clean_old_source()
+    def change_sys_source(self, clean_mode=None, source_method_code=None):
+        self.clean_old_source(clean_mode=clean_mode, source_method_code=source_method_code)
 
         failed_sources = []
         source = self.replace_source(failed_sources)
@@ -312,7 +323,7 @@ class Tool(BaseTool):
                     source = self.replace_source(failed_sources)
                     if not source:
                         PrintUtils.print_error("没有找到合适的镜像源,臣妾告退!")
-                        return
+                        return False
                     result = CmdTask('sudo apt update',100).run()
             # 如果是自动测速选择源且更新失败，自动尝试其他源
             elif result[0] != 0:
@@ -322,10 +333,11 @@ class Tool(BaseTool):
                     source = self.replace_source(failed_sources)
                     if not source:
                         PrintUtils.print_error("没有找到合适的镜像源,臣妾告退!")
-                        return
+                        return False
                     result = CmdTask('sudo apt update',100).run()
         else:
             PrintUtils.print_error("没有找到合适的镜像源,臣妾告退!")
+            return False
 
 #         # update
 #         PrintUtils.print_delay("替换完成，尝试第一次更新....")
@@ -357,6 +369,7 @@ class Tool(BaseTool):
             PrintUtils.print_success("搞定了,不信你看,累死宝宝了，还不快去给小鱼点个赞~")
             PrintUtils.print_info(result[1])
         PrintUtils.print_success("镜像更新完成.....")
+        return result[0] == 0
 
     def run(self):
         # 正式的运行

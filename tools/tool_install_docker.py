@@ -50,6 +50,7 @@ class Tool(BaseTool):
             CmdTask('sudo gpasswd -a {} docker'.format(user), 10,os_command=True).run()
 
         PrintUtils.print_info("安装完成,接下来你可以尝试使用docker --version指令测试是有正常回显~")
+        return True
 
     def run(self):
-        self.install_docker()
+        return self.install_docker()

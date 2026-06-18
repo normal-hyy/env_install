@@ -5,9 +5,9 @@ from .base import PrintUtils,CmdTask,ChooseTask
 class Tool(BaseTool):
     def __init__(self):
         self.type = BaseTool.TYPE_CONFIG
-        self.name = "模板工程"
+        self.name = "一键安装rosdep(小鱼的rosdepc,又快又好用)"
         self.author = '小鱼'
-    def choose_pip_source(self):
+    def choose_pip_source(self, preferred_source_name=None):
         """选择pip源
         
         Returns:
@@ -19,6 +19,13 @@ class Tool(BaseTool):
             "中国科学技术大学": "https://pypi.mirrors.ustc.edu.cn/simple",
             "华为云": "https://repo.huaweicloud.com/repository/pypi/simple"
         }
+
+        if preferred_source_name is not None:
+            normalized_name = str(preferred_source_name).strip().lower()
+            for name, url in sources.items():
+                if normalized_name in [name.lower(), url.lower()]:
+                    PrintUtils.print_info("已为您预设pip源: {}".format(name))
+                    return url
         
         # 构建选择字典
         choose_dict = {}
@@ -42,7 +49,7 @@ class Tool(BaseTool):
             PrintUtils.print_error("选择源时出错: {}，使用中国科学技术大学源".format(str(e)))
             return sources["中国科学技术大学"]
 
-    def install_rosdepc(self):
+    def install_rosdepc(self, preferred_source_name=None):
         """
         安装rosdepc工具，用于ROS依赖管理
         """
@@ -53,7 +60,7 @@ class Tool(BaseTool):
             return 1
         
         # 选择pip源
-        selected_source = self.choose_pip_source()
+        selected_source = self.choose_pip_source(preferred_source_name=preferred_source_name)
         PrintUtils.print_success("您选择了: {}".format(selected_source))
         
         # 先尝试不带参数安装rosdepc

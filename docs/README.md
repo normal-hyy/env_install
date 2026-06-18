@@ -10,6 +10,7 @@ wget http://fishros.com/install -O fishros && . fishros
 目前支持工具：
 ```
 一键安装:ROS(支持ROS和ROS2,树莓派Jetson) 
+一键部署:机器人环境(系统源+ROS2 Humble+rosdep+Docker)
 一键安装:VsCode(支持amd64和arm64)  
 一键安装:github桌面版(小鱼常用的github客户端) 
 一键安装:nodejs开发环境(通过nodejs可以预览小鱼官网噢  
@@ -38,4 +39,3 @@ wget http://fishros.com/install -O fishros && . fishros
 - 微信公众号：鱼香ROS
 - 小鱼微信：AiIotRobot
 ![](../../../README/imgs/image-20210726192026520.png)
-

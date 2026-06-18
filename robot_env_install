@@ -1,0 +1,43 @@
+export FISHROS_URL=http://mirror.fishros.com/install/
+
+mkdir -p /tmp/fishinstall/tools/translation/assets
+cat >/tmp/fishinstall/fish_install.yaml <<'EOF'
+chooses:
+  - { choose: 21, desc: "一键部署:机器人环境(系统源+ROS2 Humble+rosdep+Docker)" }
+EOF
+
+wget $FISHROS_URL/install.py -O /tmp/fishinstall/install.py 2>>/dev/null
+source /etc/profile
+
+SUDO=''
+if [ $UID -ne 0 ];then
+    SUDO='sudo'
+fi
+$SUDO apt install python3-distro python3-yaml -y
+$SUDO FISH_INSTALL_CONFIG=/tmp/fishinstall/fish_install.yaml python3 /tmp/fishinstall/install.py
+$SUDO rm -rf /tmp/fishinstall/
+
+if [ -f robot_env ]; then
+    $SUDO rm robot_env
+fi
+
+shell_name='bash'
+if shopt -u lastpipe 2> /dev/null; then
+    :
+else
+    if test -n "$ZSH_VERSION"; then
+        shell_name='zsh'
+    else
+        shell_name=''
+    fi
+fi
+
+if [ "$shell_name" = "bash" ]; then
+    if [ -f ~/.bashrc ]; then
+        source ~/.bashrc
+    fi
+elif [ "$shell_name" = "zsh" ]; then
+    if [ -f ~/.zshrc ]; then
+        source ~/.zshrc
+    fi
+fi

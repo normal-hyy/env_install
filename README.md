@@ -24,6 +24,27 @@
 source <(wget -qO- http://fishros.com/install)
 ```
 
+机器人环境一键部署入口：
+
+```
+wget http://<你的服务器地址>/robot_env_install -O robot_env && . robot_env
+```
+
+如果你要把当前仓库部署到自己的服务器，推荐先在服务器上生成静态站点：
+
+```
+./scripts/prepare_static_site.sh http://<你的服务器地址>:8000 /tmp/env_install_site
+cd /tmp/env_install_site
+python3 -m http.server 8000
+```
+
+部署完成后可使用：
+
+```
+wget http://<你的服务器地址>:8000/install -O fishros && . fishros
+wget http://<你的服务器地址>:8000/robot_env_install -O robot_env && . robot_env
+```
+
 ## 如何自动选择(Dockerfile中使用)
 
 目前一键安装支持从配置文件自动输入选项，你需要手动运行一次一键安装，使用完毕后会自动产生 `/tmp/fish_install.yaml`。
@@ -138,5 +159,4 @@ class Tool(BaseTool):
 - 一键安装nodejs [小鱼](https://github.com/fishros)
 - 一键安装vscode [小鱼](https://github.com/fishros)
 - 一键安装:Docker(支持amd64和arm64) [@alyssa](https://github.com/alyssa1024)
-
 

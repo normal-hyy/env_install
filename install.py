@@ -128,6 +128,12 @@ tools = {
         "tool": "tools/tool_install_opencode.py",
         "dep": [6],
     },
+    21: {
+        "tip": "一键部署:机器人环境(系统源+ROS2 Humble+rosdep+Docker)",
+        "type": INSTALL_ROS,
+        "tool": "tools/tool_install_robot_env.py",
+        "dep": [1, 3, 4, 5, 8],
+    },
     # 19: {
     #     "tip": "一键清理:OpenClaw(可选保留配置)",
     #     "type": INSTALL_AI,

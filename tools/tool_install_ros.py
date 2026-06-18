@@ -518,7 +518,7 @@ class Tool(BaseTool):
         #     mirror.append(ros_mirror_dic['packages.ros']['ROS2'])
         return mirror
 
-    def select_mirror(self):
+    def select_mirror(self, selected_mirror=None):
         """
         让用户选择镜像源
         """
@@ -550,6 +550,20 @@ class Tool(BaseTool):
                 codename, []
             ) or "mirrorz" in ros2_dist_dic.get(codename, []):
                 supported_mirrors.append("mirrorz")
+
+        if selected_mirror is not None:
+            normalized_mirror = str(selected_mirror).strip()
+            if normalized_mirror == "packages.ros":
+                PrintUtils.print_info("已为您预设ROS镜像源: ROS官方源")
+                return normalized_mirror
+            if normalized_mirror in supported_mirrors:
+                PrintUtils.print_info("已为您预设ROS镜像源: {}".format(normalized_mirror))
+                return normalized_mirror
+            PrintUtils.print_warn(
+                "预设的ROS镜像源{}当前不可用，切换为手动选择流程".format(
+                    normalized_mirror
+                )
+            )
 
         # 如果系统支持多个镜像源，则让用户选择
         if len(supported_mirrors) > 1:
@@ -596,7 +610,7 @@ class Tool(BaseTool):
 
         return "tsinghua"
 
-    def add_source(self):
+    def add_source(self, selected_mirror=None):
         """
         检查并添加ROS系统源
         """
@@ -605,7 +619,7 @@ class Tool(BaseTool):
             return False
 
         # 让用户选择镜像源
-        selected_mirror = self.select_mirror()
+        selected_mirror = self.select_mirror(selected_mirror=selected_mirror)
         PrintUtils.print_info("您选择的镜像源: {}".format(selected_mirror))
 
         # add source 1
@@ -784,7 +798,31 @@ class Tool(BaseTool):
             return True
         return False
 
-    def choose_and_install_ros(self):
+    def resolve_target_ros_name(self, ros_name, target_version_name):
+        """根据版本名称解析待安装的ROS显示名称"""
+        normalized_name = str(target_version_name).strip().lower()
+        for display_name in ros_name.keys():
+            display_name_lower = display_name.lower()
+            version_name = display_name.split("(")[0].strip().lower()
+            if normalized_name in [display_name_lower, version_name]:
+                return display_name
+        return None
+
+    def resolve_install_type(self, install_type):
+        """将安装类型统一转换为菜单编号"""
+        if isinstance(install_type, int):
+            if install_type in [1, 2]:
+                return install_type
+            return None
+
+        normalized_type = str(install_type).strip().lower()
+        if normalized_type in ["desktop", "desktop-full", "桌面版", "桌面"]:
+            return 1
+        if normalized_type in ["base", "ros-base", "基础版", "基础"]:
+            return 2
+        return None
+
+    def choose_and_install_ros(self, target_version_name=None, install_type=None):
         # search ros packages
         dic_base = AptUtils.search_package(
             "ros-base", "ros-[A-Za-z]+-ros-base", "ros-", "-base"
@@ -796,21 +834,37 @@ class Tool(BaseTool):
         for a in dic_base.keys():
             ros_name[RosVersions.get_version_string(a)] = a
 
-        code, rosname = ChooseTask(
-            ros_name.keys(), "请选择你要安装的ROS版本名称(请注意ROS1和ROS2区别):", True
-        ).run()
-        if code == 0:
-            PrintUtils.print_error("你选择退出")
-            PrintUtils.print_delay(
-                "是因为没有自己想要的ROS版本吗？ROS版本和操作系统版本是有对应关系的哦，所以可能是你的系统版本{}不对!具体请查看：https://fishros.org.cn/forum/topic/96".format(
-                    str(str(osversion.get_name()) + str(osversion.get_version()))
+        if target_version_name is not None:
+            rosname = self.resolve_target_ros_name(ros_name, target_version_name)
+            if rosname is None:
+                PrintUtils.print_error(
+                    "未找到预设的ROS版本:{}, 当前可用版本:{}".format(
+                        target_version_name, list(ros_name.keys())
+                    )
                 )
-            )
-            return False
+                return False
+            PrintUtils.print_info("已为您预设ROS版本: {}".format(rosname))
+        else:
+            code, rosname = ChooseTask(
+                ros_name.keys(), "请选择你要安装的ROS版本名称(请注意ROS1和ROS2区别):", True
+            ).run()
+            if code == 0:
+                PrintUtils.print_error("你选择退出")
+                PrintUtils.print_delay(
+                    "是因为没有自己想要的ROS版本吗？ROS版本和操作系统版本是有对应关系的哦，所以可能是你的系统版本{}不对!具体请查看：https://fishros.org.cn/forum/topic/96".format(
+                        str(str(osversion.get_name()) + str(osversion.get_version()))
+                    )
+                )
+                return False
         version_dic = {1: rosname + "桌面版", 2: rosname + "基础版(小)"}
-        code, name = ChooseTask(
-            version_dic, "请选择安装的具体版本(如果不知道怎么选,请选1桌面版):", False
-        ).run()
+        resolved_install_type = self.resolve_install_type(install_type)
+        if resolved_install_type is not None:
+            code = resolved_install_type
+            PrintUtils.print_info("已为您预设安装类型: {}".format(version_dic[code]))
+        else:
+            code, name = ChooseTask(
+                version_dic, "请选择安装的具体版本(如果不知道怎么选,请选1桌面版):", False
+            ).run()
 
         if code == 0:
             PrintUtils.print_error("你选择退出。。。。")
@@ -957,21 +1011,32 @@ class Tool(BaseTool):
                 "安装失败了,请打开鱼香社区：https://fishros.org.cn/forum 在一键安装专区反馈问题..."
             )
 
-    def install_ros(self):
+    def install_ros(
+        self,
+        skip_system_source=False,
+        selected_mirror=None,
+        target_version_name=None,
+        install_type=None,
+    ):
         PrintUtils.print_delay("欢迎使用ROS开箱子工具，本工具由[鱼香ROS]小鱼贡献..")
         if not self.support_install():
             return False
 
-        self.check_sys_source()
+        if not skip_system_source:
+            self.check_sys_source()
         self.add_key()
-        self.add_source()
+        self.add_source(selected_mirror=selected_mirror)
 
-        ros_version = self.choose_and_install_ros()
+        ros_version = self.choose_and_install_ros(
+            target_version_name=target_version_name, install_type=install_type
+        )
         if not ros_version:
-            return
+            return False
         self.config_env_and_tip(ros_version)
         if self.install_success(ros_version):
             RosVersions.tip_test_command(ros_version)
+            return ros_version
+        return False
 
     def run(self):
         self.install_ros()
